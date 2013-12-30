@@ -51,6 +51,7 @@ static const CGFloat kMinImageScale = 1.0f;
 @property(nonatomic,assign) NSInteger imageIndex;
 @property(nonatomic,weak) UIImage * defaultImage;
 @property(nonatomic,assign) NSInteger initialIndex;
+@property(nonatomic,weak) UILabel *countLabel;
 
 @property (nonatomic,weak) MHFacebookImageViewerOpeningBlock openingBlock;
 @property (nonatomic,weak) MHFacebookImageViewerClosingBlock closingBlock;
@@ -73,6 +74,7 @@ static const CGFloat kMinImageScale = 1.0f;
 @synthesize closingBlock = _closingBlock;
 @synthesize openingBlock = _openingBlock;
 @synthesize doneButton = _doneButton;
+@synthesize countLabel = _countLabel;
 @synthesize senderView = _senderView;
 @synthesize imageIndex = _imageIndex;
 @synthesize superView = _superView;
@@ -353,11 +355,16 @@ static const CGFloat kMinImageScale = 1.0f;
         if(__scrollView.zoomScale == __scrollView.minimumZoomScale){
             if(!_isDoneAnimating){
                 _isDoneAnimating = YES;
+#warning todo - disabling _countLabel for now until we can properly update the page number
+                //[self.viewController.view addSubview:_countLabel];
                 [self.viewController.view addSubview:_doneButton];
                 _doneButton.alpha = 0.0f;
+                _countLabel.alpha = _doneButton.alpha;
                 [UIView animateWithDuration:0.2f animations:^{
                     _doneButton.alpha = 1.0f;
+                    _countLabel.alpha = _doneButton.alpha;
                 } completion:^(BOOL finished) {
+                    [self.viewController.view bringSubviewToFront:_countLabel];
                     [self.viewController.view bringSubviewToFront:_doneButton];
                     _isDoneAnimating = NO;
                 }];
@@ -394,11 +401,14 @@ static const CGFloat kMinImageScale = 1.0f;
         if(_doneButton.superview) {
             _isDoneAnimating = YES;
             _doneButton.alpha = 1.0f;
+            _countLabel.alpha = _doneButton.alpha;
             [UIView animateWithDuration:0.2f animations:^{
                 _doneButton.alpha = 0.0f;
+                _countLabel.alpha = _doneButton.alpha;
             } completion:^(BOOL finished) {
                 _isDoneAnimating = NO;
                 [_doneButton removeFromSuperview];
+                [_countLabel removeFromSuperview];
             }];
         }
     }
@@ -419,6 +429,7 @@ static const CGFloat kMinImageScale = 1.0f;
     UIView *_blackMask;
     UIImageView * _imageView;
     UIButton * _doneButton;
+    UILabel * _countLabel;
     UIView * _superView;
     
     CGPoint _panOrigin;
@@ -468,6 +479,7 @@ static const CGFloat kMinImageScale = 1.0f;
         imageViewerCell.superView = _senderView.superview;
         imageViewerCell.senderView = _senderView;
         imageViewerCell.doneButton = _doneButton;
+        imageViewerCell.countLabel = _countLabel;
         imageViewerCell.initialIndex = _initialIndex;
         imageViewerCell.statusBarStyle = _statusBarStyle;
         [imageViewerCell loadAllRequiredViews];
@@ -537,6 +549,19 @@ static const CGFloat kMinImageScale = 1.0f;
     [_doneButton setImageEdgeInsets:UIEdgeInsetsMake(-10, -10, -10, -10)];  // make click area bigger
     [_doneButton setImage:[UIImage imageNamed:@"Done"] forState:UIControlStateNormal];
     _doneButton.frame = CGRectMake(windowBounds.size.width - (51.0f + 9.0f),15.0f, 51.0f, 26.0f);
+    
+    _countLabel = [UILabel new];
+    _countLabel.font = [UIFont boldSystemFontOfSize:20];
+    _countLabel.textAlignment = NSTextAlignmentCenter;
+    _countLabel.textColor = [UIColor whiteColor];
+    _countLabel.backgroundColor = [UIColor colorWithWhite:0.2 alpha:0.4];
+    _countLabel.frame = CGRectMake(windowBounds.origin.x, 0.90 * CGRectGetHeight(windowBounds), CGRectGetWidth(windowBounds), 40.0);
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    [self updateCountLabel];
 }
 
 #pragma mark - Show
@@ -559,6 +584,21 @@ static const CGFloat kMinImageScale = 1.0f;
     _imageURL = nil;
     _senderView = nil;
     _imageDatasource = nil;
+}
+
+- (void)updateCountLabel {
+    int page = MAX(1, (_tableView.contentOffset.y / _tableView.bounds.size.height));
+    NSInteger totalPages = [self.imageDatasource numberImagesForImageViewer:self];
+    
+    _countLabel.text = [NSString stringWithFormat:@"%i of %i", page, totalPages];
+}
+
+#pragma mark UIScrollViewDelegate for tableview
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    if (scrollView == _tableView) {
+        [self updateCountLabel];
+    }
 }
 
 - (NSUInteger) supportedInterfaceOrientations {
@@ -659,9 +699,8 @@ static const CGFloat kMinImageScale = 1.0f;
     imageBrowser.initialIndex = initialIndex;
     imageBrowser.imageURL = [imageDatasource imageURLAtIndex:0 imageViewer:imageBrowser];
     
-    if(self.image) {
-        [imageBrowser presentFromRootViewController];
-    }
+    
+    [imageBrowser presentFromRootViewController];
 }
 
 
