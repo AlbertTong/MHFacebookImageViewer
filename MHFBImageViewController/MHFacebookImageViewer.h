@@ -29,7 +29,7 @@ typedef void (^MHFacebookImageViewerOpeningBlock)(void);
 typedef void (^MHFacebookImageViewerClosingBlock)(void);
 
 
-@class MHFacebookImageViewer;
+@class MHFacebookImageViewer, MHFacebookImageViewerTapGestureRecognizer;
 @protocol MHFacebookImageViewerDatasource <NSObject>
 @required
 - (NSInteger) numberImagesForImageViewer:(MHFacebookImageViewer*) imageViewer;
@@ -49,6 +49,8 @@ typedef void (^MHFacebookImageViewerClosingBlock)(void);
 
 - (void)presentFromRootViewController;
 - (void)presentFromViewController:(UIViewController *)controller;
+
+
 @end
 
 #pragma mark - UIImageView Category
@@ -61,4 +63,7 @@ typedef void (^MHFacebookImageViewerClosingBlock)(void);
 - (void) setupImageViewerWithDatasource:(id<MHFacebookImageViewerDatasource>)imageDatasource onOpen:(MHFacebookImageViewerOpeningBlock)open onClose:(MHFacebookImageViewerClosingBlock)close;
 - (void) setupImageViewerWithDatasource:(id<MHFacebookImageViewerDatasource>)imageDatasource initialIndex:(NSInteger)initialIndex onOpen:(MHFacebookImageViewerOpeningBlock)open onClose:(MHFacebookImageViewerClosingBlock)close;
 - (void)removeImageViewer;
+
+- (void) presentImageViewerWithDataSource:(id<MHFacebookImageViewerDatasource>)imageDatasource initialIndex:(NSInteger)initialIndex onOpen:(MHFacebookImageViewerOpeningBlock)open onClose:(MHFacebookImageViewerClosingBlock)close;
+
 @end

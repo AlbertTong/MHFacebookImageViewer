@@ -560,6 +560,14 @@ static const CGFloat kMinImageScale = 1.0f;
     _senderView = nil;
     _imageDatasource = nil;
 }
+
+- (NSUInteger) supportedInterfaceOrientations {
+    if ((UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)) {
+        return UIInterfaceOrientationMaskAll;
+    }
+    return UIInterfaceOrientationMaskPortrait;
+}
+
 @end
 
 
@@ -639,6 +647,21 @@ static const CGFloat kMinImageScale = 1.0f;
     imageBrowser.initialIndex = gestureRecognizer.initialIndex;
     if(self.image)
         [imageBrowser presentFromRootViewController];
+}
+
+- (void) presentImageViewerWithDataSource:(id<MHFacebookImageViewerDatasource>)imageDatasource initialIndex:(NSInteger)initialIndex onOpen:(MHFacebookImageViewerOpeningBlock)open onClose:(MHFacebookImageViewerClosingBlock)close {
+    
+    MHFacebookImageViewer * imageBrowser = [[MHFacebookImageViewer alloc]init];
+    imageBrowser.senderView = self;
+    imageBrowser.imageDatasource = imageDatasource;
+    imageBrowser.openingBlock = open;
+    imageBrowser.closingBlock = close;
+    imageBrowser.initialIndex = initialIndex;
+    imageBrowser.imageURL = [imageDatasource imageURLAtIndex:0 imageViewer:imageBrowser];
+    
+    if(self.image) {
+        [imageBrowser presentFromRootViewController];
+    }
 }
 
 
